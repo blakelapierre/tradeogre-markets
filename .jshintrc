@@ -1,0 +1,6 @@
+{
+  "esnext": true,
+  "laxcomma": true,
+  "noyield": true,
+  "sub": true
+}
