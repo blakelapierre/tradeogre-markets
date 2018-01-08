@@ -4,6 +4,8 @@ const {dependencies} = require('./package.json'),
       fs = require('fs'),
       path = require('path'),
       browserify = require('browserify'),
+      babelify = require('babelify'),
+      tsify = require('tsify'),
       browserSync = require('browser-sync'),
       reload = browserSync.reload,
       source = require('vinyl-source-stream'),
@@ -16,7 +18,6 @@ const {dependencies} = require('./package.json'),
         clean,
         concat,
         imagemin,
-        jshint,
         less,
         lessReporter,
         minifyCss,
@@ -29,6 +30,7 @@ const {dependencies} = require('./package.json'),
         sourcemaps,
         spritesmith,
         tasks,
+        tslint,
         uglify,
         util
       } = require('gulp-load-plugins')({pattern: ['gulp_*', 'gulp.*', 'gulp-*']});
@@ -89,6 +91,8 @@ gulp.task('js:app', ['js:lint'],
       entries: [paths.src.app],
       debug: true
     })
+      .plugin(tsify, { noImplicityAny: true })
+      .transform(babelify)
       .external(_.keys(dependencies))
       .bundle()
       .on('error', function(err) { // Cannot use => syntax here, as `this` must be set by the caller
@@ -105,9 +109,8 @@ gulp.task('js:lint',
     gulp.src(paths.src.scripts)
     ,cached('js:lint')
     ,p('js:lint')
-    ,jshint()
-    ,jshint.reporter('jshint-stylish')
-    ,jshint.reporter('fail')
+    ,tslint({formatter: 'verbose'})
+    ,tslint.report()
   ]));
 
 gulp.task('styles', ['less:concat']);
