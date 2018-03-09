@@ -1,121 +1,108 @@
 import { h, render } from 'preact-cycle';
 
-const ADD_TRACKER_ITEM = ({
-  tracker: {
-    items,
-    inputText,
-    ...trackerProps
-  }, ...props
-}) => ({
-  tracker: {
-    items: items.concat(inputText),
-    inputText: '',
-    ...trackerProps
-  }, ...props
-});
 
-const SET_TRACKER_TEXT = ({
-  tracker: {
-    inputText,
-    ...trackerProps
-  },
-  ...props
-}, event) => ({
-  tracker: {
-    inputText: event.target.value,
-    ...trackerProps
-  },
-  ...props
-});
+const markets = {
+  'tradogre': {},
+  'tradesatoshi': {
+    'orderbook': 'https://tradesatoshi.com/api/public/getorderbook?market=TRTL_BTC&type=both&depth=200'
+  }
+};
 
-const fromEvent = (prev, event) => event.target.value;
 
-const Tracker = ({tracker:{items, inputText}}, {mutation}) => (
-  <tracker>
-    {items.map(item => <item>{item}</item>)}
-    <TrackerInput inputText={inputText} />
-  </tracker>
+const START = (_, mutation) => {
+  _.started = true;
+
+  LISTEN_TO_TRADEOGRE(_, mutation);
+  LISTEN_TO_TRADESATOSHI(_, mutation);
+};
+
+const LISTEN_TO_TRADEOGRE = (_, mutation) => {
+  const socket = new WebSocket('wss://tradeogre.com:8080/');
+
+  socket.addEventListener('open', () => {
+    socket.send(JSON.stringify({"a":"submarket","name":"BTC-TRTL"}));
+
+    setInterval(() => socket.send(JSON.stringify({"a":"submarket","name":"BTC-TRTL"})), 30 * 1000);
+  });
+
+  socket.addEventListener('message', ({data}) => {
+    const obj = JSON.parse(data);
+
+    if (obj.a === 'orders') {
+      if (obj.t === 'buy') {
+        mutation(NEW_MARKET_DATA)('tradeogre', 'buy', 'TRTL', Object.keys(obj.d).map((price) => [stringToSatoshis(price), parseFloat(obj.d[price])]));
+      }
+      else if (obj.t === 'sell') {
+        mutation(NEW_MARKET_DATA)('tradeogre', 'sell', 'TRTL', Object.keys(obj.d).map((price) => [stringToSatoshis(price), parseFloat(obj.d[price])]));
+      }
+    }
+  });
+};
+
+const LISTEN_TO_TRADESATOSHI = (_, mutation) => {
+  fetch('https://tradesatoshi.com/api/public/getorderbook?market=TRTL_BTC&type=both&depth=50')
+    .then(response => {
+      console.log({response});
+    })
+    .catch(error => {
+      console.log({error});
+    });
+};
+
+const NEW_MARKET_DATA = (_, exchange, orderType, coin, data) => {
+  const coinData = _.market[exchange][coin];
+  coinData[orderType] = data;
+  console.log(data.buy);
+  coinData.totalBuyMarket = (coinData.buy || []).reduce((sum, [price, amount]) => sum + amount, 0);
+  coinData.totalSellMarket = (coinData.sell || []).reduce((sum, [price, amount]) => sum + amount, 0);
+  coinData.totalMarket = coinData.totalBuyMarket + coinData.totalSellMarket;
+  console.log(_.market);
+  return _;
+};
+
+const Markets = ({market}) => (
+  <markets>
+    {console.log({market})}
+    {Object.keys(market['tradeogre']).map(coin => <Market coin={coin} data={market['tradeogre'][coin]} />)}
+  </markets>
 );
 
-const TrackerInput = ({inputText}, {mutation}) => (
-  <tracker-input>
-    <form onSubmit={mutation(ADD_TRACKER_ITEM)} action="javascript:">
-      <input placeholder="New item..." value={inputText} onInput={mutation(SET_TRACKER_TEXT)} autoFocus />
-    </form>
-  </tracker-input>
+const Market = ({coin, data}) => (
+  <market>
+    <div>{coin} - {data.totalMarket}</div>
+    <data>
+      <buy>{(data.buy || []).map(([price, amount]) => <PriceBar price={price} amount={amount} ofTotalMarket={amount / data.totalMarket} />)}</buy>
+      <sell>{(data.sell || []).map(([price, amount]) => <PriceBar price={price} amount={amount} ofTotalMarket={amount / data.totalMarket} />)}</sell>
+    </data>
+  </market>
 );
 
-const Info = ({items}, {info: {metrics}}) => (
-  <info>
-    <headers>
-      {metrics.map(metric => <Metric metric={metric} />)}
-    </headers>
-    <bars>
-      {metrics.map(metric => <Bar value={Math.random() * 100} />)}
-    </bars>
-  </info>
+const PriceBar = ({price, amount, ofTotalMarket}) => (
+  <price-bar style={{'height': `${ofTotalMarket * 100}%`}} title={amount}>
+    &nbsp;
+  </price-bar>
 );
 
-const Metric = ({metric: {name, units}}) => (
-  <metric>{name} ({units[0]})</metric>
-);
-
-const Bar = ({value}) => (
-  <bar style={{'height': `${value}%`}}>bar</bar>
-);
-
-const SideBySide = ({tracker, info}) => (
-  <side-by-side>
-    <Tracker tracker={tracker} />
-    <Info info={info} />
-  </side-by-side>
+const View = (Component) => ({started, ...props}, {mutation}) => (
+  <view>
+    {started ? <Component {...props} /> : mutation(START)(mutation)}
+  </view>
 );
 
 render(
-  SideBySide, {
-    tracker: {items: [], text: ''},
-    info: {
-      items: [],
-      metrics: [{
-        name: 'Calories',
-        units: ['kcal']
-      },{
-        name: 'Saturated Fat',
-        units: ['g'],
-        group: 'Total Fat'
-      },{
-        name: 'Trans Fat',
-        units: ['g']
-      },{
-        name: 'Monounsaturated Fat',
-        units: ['g'],
-        group: 'Unsaturated Fat'
-      },{
-        name: 'Polyunsaturated Fat',
-        units: ['g'],
-        group: 'Unsaturated Fat'
-      },{
-        name: 'Sugars',
-        units: ['g']
-      },{
-        name: 'Soluble Fiber',
-        units: ['g']
-      },{
-        name: 'Insoluble Fiber',
-        units: ['g']
-      },{
-        name: 'Other Carbohydrates',
-        units: ['g']
-      },{
-        name: 'Protein',
-        units: ['g']
-      },{
-        name: 'Sodium',
-        units: ['mg']
-      },{
-        name: 'Potassium',
-        units: ['mg']
-      }]
-    },
+  View(Markets), {
+    'market': {
+      'tradeogre': {
+        'TRTL': {
+
+        }
+      }
+    }
   }, document.body
 );
+
+
+function stringToSatoshis(str) {
+  const [big, little] = str.toString().split('.');
+  return parseInt(little.padEnd(8, '0')) + parseInt(big) * 100000000
+}

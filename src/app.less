@@ -8,60 +8,40 @@ body {
 
   margin: 0;
   padding: 0;
-}
 
-side-by-side {
-  flex: 1 1 auto;
+  view {
+    markets {
+      market {
+        display: flex;
 
-  display: flex;
+        height: 10em;
 
-  justify-content: space-around;
-  align-items: center;
-}
+        data {
+          display: flex;
 
-tracker {
-  display: flex;
-  flex-direction: column;
-}
+          buy, sell {
+            display: flex;
 
-info {
-  height: 50vh;
+            align-items: flex-end;
 
-  display: flex;
-  flex-direction: column;
+            price-bar {
+              display: block;
+            }
+          }
 
-  bars {
-    height: 100%;
-    
-    position: relative;
+          buy {
+            price-bar {
+              background-color: #0f0;
+            }
+          }
 
-    flex: 1 1 auto;
-
-    display: flex;
+          sell {
+            price-bar {
+              background-color: #f00;
+            }
+          }
+        }
+      }
+    }
   }
-}
-
-headers {
-  display: flex;
-}
-
-metric {
-  display: block;
-
-  width: 1em;
-  margin: 0 0.25em;
-
-  overflow: visible;
-  white-space: nowrap;
-
-  transform: rotate(-70deg);
-  transform-origin: 0% 50%;
-}
-
-bar {
-  display: block;
-
-  width: 1.5em;
-
-  background-color: #f0f;
 }
