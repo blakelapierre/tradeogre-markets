@@ -1,0 +1,16 @@
+#!/bin/sh
+
+rm -rf .rev \
+&& rm -rf .publish_stage \
+&& mkdir .publish_stage \
+&& gulp build \
+&& cd .publish_stage \
+&& git init \
+&& git checkout -b gh-pages \
+&& git remote add origin git@github.com:blakelapierre/tradeogre-markets \
+&& ((git pull origin gh-pages && git rm -r .) || echo "new gh-pages") \
+&& echo "tradeogre-markets.p2p.ninja" > CNAME \
+&& cp  -r ../.rev/* . \
+&& git add . \
+&& git commit -m ".rev" \
+&& git push origin gh-pages

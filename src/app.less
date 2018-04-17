@@ -10,21 +10,45 @@ body {
   padding: 0;
 
   view {
-    markets {
-      market {
-        display: flex;
+    flex: 1 1 auto;
 
-        height: 10em;
+    overflow-y: auto;
+
+    markets {
+      display: flex;
+
+      summary {
+        flex: 1 1 auto;
+
+        coin {
+          display: block;
+        }
+      }
+
+      market {
+        flex: 2 1 auto;
+
+        display: flex;
+        flex-direction: column;
+
+        height: 4em;
 
         data {
           display: flex;
 
+          flex: 1 1 auto;
+
           buy, sell {
+            flex: 1 1 auto;
+
             display: flex;
 
+            justify-content: stretch;
             align-items: flex-end;
 
             price-bar {
+              flex: 1 1 auto;
+
               display: block;
             }
           }
