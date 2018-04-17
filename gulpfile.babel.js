@@ -44,8 +44,8 @@ gulp.task('default', ['build']);
 
 gulp.task('build', sequence(['clean:rev', 'clean:dist'],
                             ['js:vendor', 'js:app', 'html', 'images', 'styles', 'fonts'],
-                            ['minify:css', 'minify:html', 'minify:js', 'minify:images'],
-                            'rev'));
+                            ['minify:css', 'minify:html', 'minify:js', 'minify:images']/*,
+                            'rev'*/));
 
 gulp.task('dev', cb => {
   const {src} = paths;
